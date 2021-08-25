@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,20 +12,40 @@ import (
 )
 
 type Todo struct {
-	id     int    `json:"id"`
-	title  string `json:"title"`
-	status bool   `json:"status"`
+	ID     int    `json:"id"`
+	Title  string `json:"title"`
+	Status bool   `json:"status"`
 }
 
-var Todos []Todo
+var todos []Todo
+
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
 
 // homepage for the api
 func welcome(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome")
 }
 
+func getTodos(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: getTodos")
+	enableCors(&w)
+	w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(todos)
+	responseJson, err := json.Marshal(todos)
+	if err != nil {
+		panic(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(responseJson)
+}
+
 func handleRequests() {
 	http.HandleFunc("/", welcome)
+	http.HandleFunc("/todos", getTodos)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
@@ -68,15 +89,16 @@ func fetchTodos(db *sql.DB) {
 	for row.Next() {
 		var id int
 		var text string
+		status := false
 		row.Scan(&id, &text)
-		Todos = append(Todos, Todo{id, text, false})
+		todos = append(todos, Todo{ID: id, Title: text, Status: status})
 	}
 }
 
 // print todos for debugging
 func displayTodos(db *sql.DB) {
-	for _, todo := range Todos {
-		fmt.Println("Todo: ", todo.title)
+	for _, todo := range todos {
+		fmt.Println(todo)
 	}
 }
 
@@ -85,13 +107,12 @@ func main() {
 	defer database.Close()
 	createTables(database)
 	fetchTodos(database)
+	displayTodos(database)
 
 	/*
 		insertTodo(database, "Deneme")
 		insertTodo(database, "Merhaba")
 		insertTodo(database, "Hoooohooo")
 	*/
-
-	displayTodos(database)
-	// handleRequests()
+	handleRequests()
 }

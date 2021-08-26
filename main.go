@@ -58,7 +58,8 @@ func createTables(db *sql.DB) {
 
 	createTodosTableSQL := `CREATE TABLE todos (
 		"id" integer PRIMARY KEY AUTOINCREMENT,
-		"text" TEXT
+		"text" TEXT,
+		"status" integer
 	);`
 	statement, err := db.Prepare(createTodosTableSQL)
 	if err != nil {
@@ -68,13 +69,13 @@ func createTables(db *sql.DB) {
 }
 
 // insert new todo
-func insertTodo(db *sql.DB, text string) {
-	insertTodoSQL := `INSERT INTO todos(text) VALUES (?)`
+func insertTodo(db *sql.DB, text string, status bool) {
+	insertTodoSQL := `INSERT INTO todos(text, status) VALUES (?, ?)`
 	statement, err := db.Prepare(insertTodoSQL)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	_, err = statement.Exec(text)
+	_, err = statement.Exec(text, status)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -89,8 +90,8 @@ func fetchTodos(db *sql.DB) {
 	for row.Next() {
 		var id int
 		var text string
-		status := false
-		row.Scan(&id, &text)
+		var status bool
+		row.Scan(&id, &text, &status)
 		todos = append(todos, Todo{ID: id, Title: text, Status: status})
 	}
 }
@@ -109,10 +110,8 @@ func main() {
 	fetchTodos(database)
 	displayTodos(database)
 
-	/*
-		insertTodo(database, "Deneme")
-		insertTodo(database, "Merhaba")
-		insertTodo(database, "Hoooohooo")
-	*/
+	insertTodo(database, "Deneme", false)
+	insertTodo(database, "Merhaba", false)
+	insertTodo(database, "Hoooohooo", true)
 	handleRequests()
 }

@@ -4,10 +4,19 @@ import (
 	"database/sql"
 	"log"
 	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
+func connectToDatabase() *sql.DB {
+	database, _ := sql.Open("sqlite3", "./todo.db")
+	return database
+}
+
 // create required tables
-func createTables(db *sql.DB) {
+func createTables() {
+	db := connectToDatabase()
+	defer db.Close()
 	// check is todo.db file exists
 	if _, err := os.Stat("./todo.db"); err == nil {
 		return
@@ -26,7 +35,9 @@ func createTables(db *sql.DB) {
 }
 
 // insert new todo
-func insertTodo(db *sql.DB, text string, status bool) {
+func insertTodo(text string, status bool) {
+	db := connectToDatabase()
+	defer db.Close()
 	insertTodoSQL := `INSERT INTO todos(text, status) VALUES (?, ?)`
 	statement, err := db.Prepare(insertTodoSQL)
 	if err != nil {
@@ -36,10 +47,13 @@ func insertTodo(db *sql.DB, text string, status bool) {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	todos = append(todos, Todo{Title: text, Status: status})
 }
 
 // get all todos
-func fetchTodos(db *sql.DB) {
+func fetchTodos() {
+	db := connectToDatabase()
+	defer db.Close()
 	row, err := db.Query("SELECT * FROM todos ORDER BY id DESC")
 	if err != nil {
 		log.Fatal(err)

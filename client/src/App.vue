@@ -79,31 +79,32 @@ li > span.done {
 </style>
 
 <script>
-import { ref } from 'vue';
 import axios from 'axios';
 
 export default {
     data () {
         return {
+            newTodo: '',
             todos: []
         };
+    },
+    methods: {
+         addNewTodo() {
+            if (this.newTodo.length === 0) return;
+
+            axios.post('http://localhost:8000/new', {
+                    title: this.newTodo
+                })
+                .then(res => {
+                    this.todos = res.data;
+                });
+        }
     },
     created () {
         axios.get('http://localhost:8000/todos')
             .then(res => {
                 this.todos = res.data;
             });
-    },
-    setup () {
-        const newTodo = ref('');
-        
-        function addNewTodo() {
-        }
-
-        return {
-            newTodo,
-            addNewTodo,
-        };
     }
 }
 </script>

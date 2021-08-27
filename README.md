@@ -22,4 +22,5 @@ This project is for learning purposes and not designed for real-life needs. But 
 
 ## License
 Copyright 2021 Berkay Çubuk berkay@berkaycubuk.com
+
 Released under MIT License

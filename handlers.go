@@ -57,6 +57,31 @@ func addTodo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func deleteTodos(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: deleteTodos")
+	setupResponse(&w, r)
+
+	switch r.Method {
+	case "OPTIONS":
+		return
+	case "DELETE":
+		emptyTodos()
+		responseJson, err := json.Marshal(todos)
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusCreated)
+		w.Write(responseJson)
+	default:
+		responseJson, err := json.Marshal(map[string]string{"message": "Please use DELETE method"})
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(responseJson)
+	}
+}
+
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
@@ -71,5 +96,6 @@ func handleRequests() {
 	http.HandleFunc("/", welcome)
 	http.HandleFunc("/todos", getTodos)
 	http.HandleFunc("/new", addTodo)
+	http.HandleFunc("/delete-all", deleteTodos)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

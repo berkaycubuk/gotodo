@@ -5,7 +5,7 @@
             <input v-model="newTodo" placeholder="New Todo" name="newTodo"/>
             <button>Add</button>
         </form>
-        <h2>List</h2>
+        <h2>List</h2><button @click.prevent="deleteAll">Delete All</button>
         <ul>
             <li v-for="todo in todos" :key="todo.id">
                 <span :class="{ done: todo.status }">
@@ -89,15 +89,24 @@ export default {
         };
     },
     methods: {
-         addNewTodo() {
+        deleteAll() {
+            if (this.todos.length === 0) return;
+
+            axios.delete('http://localhost:8000/delete-all')
+            .then(res => {
+                this.todos = res.data;
+            });
+        },
+        addNewTodo() {
             if (this.newTodo.length === 0) return;
 
             axios.post('http://localhost:8000/new', {
-                    title: this.newTodo
-                })
-                .then(res => {
-                    this.todos = res.data;
-                });
+                title: this.newTodo
+            })
+            .then(res => {
+                this.newTodo = '';
+                this.todos = res.data;
+            });
         }
     },
     created () {

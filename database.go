@@ -34,6 +34,21 @@ func createTables() {
 	statement.Exec()
 }
 
+func emptyTodos() {
+	db := connectToDatabase()
+	defer db.Close()
+	emptyTodosSQL := `DELETE FROM todos`
+	statement, err := db.Prepare(emptyTodosSQL)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	todos = nil
+}
+
 // insert new todo
 func insertTodo(text string, status bool) {
 	db := connectToDatabase()

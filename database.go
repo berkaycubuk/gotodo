@@ -34,6 +34,20 @@ func createTables() {
 	statement.Exec()
 }
 
+func databaseDeleteTodo(ID int) {
+	db := connectToDatabase()
+	defer db.Close()
+	deleteTodoSQL := `DELETE FROM todos WHERE id=?`
+	statement, err := db.Prepare(deleteTodoSQL)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(ID)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
 func emptyTodos() {
 	db := connectToDatabase()
 	defer db.Close()
@@ -62,7 +76,6 @@ func insertTodo(text string, status bool) {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	todos = append(todos, Todo{Title: text, Status: status})
 }
 
 // get all todos
@@ -74,6 +87,11 @@ func fetchTodos() {
 		log.Fatal(err)
 	}
 	defer row.Close()
+
+	// empty todos slice
+	todos = nil
+
+	// fill it with the new data
 	for row.Next() {
 		var id int
 		var text string

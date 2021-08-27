@@ -11,6 +11,7 @@
                 <span :class="{ done: todo.status }">
                 {{ todo.title }}
                 </span>
+                <button @click.prevent="deleteSingle(todo.id)">Delete</button>
             </li>
         </ul>
     </div>
@@ -67,10 +68,16 @@ ul {
 }
 
 li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin: 10px 0;
     padding: 12px;
     color: #eaeaea;
     background-color: #333;
+}
+
+li > button {
 }
 
 li > span.done {
@@ -89,6 +96,14 @@ export default {
         };
     },
     methods: {
+        deleteSingle(id) {
+            axios.post('http://localhost:8000/delete', {
+                id: id
+            })
+            .then(res => {
+                this.todos = res.data;
+            });
+        },
         deleteAll() {
             if (this.todos.length === 0) return;
 

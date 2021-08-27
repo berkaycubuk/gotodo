@@ -41,11 +41,45 @@ func addTodo(w http.ResponseWriter, r *http.Request) {
 		decoder := json.NewDecoder(r.Body)
 		decoder.Decode(&newTodo)
 		insertTodo(newTodo.Title, false)
+		fetchTodos()
 		responseJson, err := json.Marshal(todos)
 		if err != nil {
 			panic(err)
 		}
 		w.WriteHeader(http.StatusCreated)
+		w.Write(responseJson)
+	default:
+		responseJson, err := json.Marshal(map[string]string{"message": "Please use POST method"})
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(responseJson)
+	}
+}
+
+type DeleteTodoRequest struct {
+	ID int `json:"id"`
+}
+
+func deleteTodo(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: deleteTodo")
+	setupResponse(&w, r)
+
+	switch r.Method {
+	case "OPTIONS":
+		return
+	case "POST":
+		var todoToDelete DeleteTodoRequest
+		decoder := json.NewDecoder(r.Body)
+		decoder.Decode(&todoToDelete)
+		databaseDeleteTodo(todoToDelete.ID)
+		fetchTodos()
+		responseJson, err := json.Marshal(todos)
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusOK)
 		w.Write(responseJson)
 	default:
 		responseJson, err := json.Marshal(map[string]string{"message": "Please use POST method"})
@@ -96,6 +130,7 @@ func handleRequests() {
 	http.HandleFunc("/", welcome)
 	http.HandleFunc("/todos", getTodos)
 	http.HandleFunc("/new", addTodo)
+	http.HandleFunc("/delete", deleteTodo)
 	http.HandleFunc("/delete-all", deleteTodos)
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }

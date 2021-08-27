@@ -2,16 +2,22 @@
     <div class="container">
         <h1>GoTodo Web Client</h1>
         <form @submit.prevent="addNewTodo">
-            <input v-model="newTodo" placeholder="New Todo" name="newTodo"/>
+            <input v-model="newTodo" type="text" placeholder="New Todo" name="newTodo"/>
             <button>Add</button>
         </form>
         <h2>List</h2><button @click.prevent="deleteAll">Delete All</button>
         <ul>
             <li v-for="todo in todos" :key="todo.id">
-                <span :class="{ done: todo.status }">
-                {{ todo.title }}
-                </span>
-                <button @click.prevent="deleteSingle(todo.id)">Delete</button>
+                <div v-if="todo.edit">
+                    <input v-model="todo.title" class="edit-input" type="text" />
+                    <button @click.prevent="updateTodo(todo.id, todo.title); todo.edit = false;">Update</button>
+                </div>
+                <div v-else>
+                    <span :class="{ done: todo.status }" @click="todo.edit = true">
+                    {{ todo.title }}
+                    </span>
+                    <button @click.prevent="deleteSingle(todo.id)">Delete</button>
+                </div>
             </li>
         </ul>
     </div>
@@ -68,13 +74,22 @@ ul {
 }
 
 li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin: 10px 0;
     padding: 12px;
     color: #eaeaea;
     background-color: #333;
+}
+
+li > div {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.edit-input {
+    font-size: 1rem;
+    padding: 10px 10px;
 }
 
 li > button {
@@ -102,6 +117,7 @@ export default {
             })
             .then(res => {
                 this.todos = res.data;
+                this.todos = this.todos.map(data => ({...data, edit: false}));
             });
         },
         deleteAll() {
@@ -110,6 +126,17 @@ export default {
             axios.delete('http://localhost:8000/delete-all')
             .then(res => {
                 this.todos = res.data;
+                this.todos = this.todos.map(data => ({...data, edit: false}));
+            });
+        },
+        updateTodo(id, title) {
+            axios.post('http://localhost:8000/update', {
+                id: id,
+                title: title
+            })
+            .then(res => {
+                this.todos = res.data;
+                this.todos = this.todos.map(data => ({...data, edit: false}));
             });
         },
         addNewTodo() {
@@ -121,6 +148,7 @@ export default {
             .then(res => {
                 this.newTodo = '';
                 this.todos = res.data;
+                this.todos = this.todos.map(data => ({...data, edit: false}));
             });
         }
     },
@@ -128,6 +156,7 @@ export default {
         axios.get('http://localhost:8000/todos')
             .then(res => {
                 this.todos = res.data;
+                this.todos = this.todos.map(data => ({...data, edit: false}));
             });
     }
 }

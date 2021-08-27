@@ -34,6 +34,20 @@ func createTables() {
 	statement.Exec()
 }
 
+func databaseUpdateTodo(ID int, Title string) {
+	db := connectToDatabase()
+	defer db.Close()
+	updateTodoSQL := `UPDATE todos SET text=? WHERE id=?`
+	statement, err := db.Prepare(updateTodoSQL)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	_, err = statement.Exec(Title, ID)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+}
+
 func databaseDeleteTodo(ID int) {
 	db := connectToDatabase()
 	defer db.Close()

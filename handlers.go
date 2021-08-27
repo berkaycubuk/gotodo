@@ -25,6 +25,40 @@ func getTodos(w http.ResponseWriter, r *http.Request) {
 	w.Write(responseJson)
 }
 
+type UpdateTodoRequest struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
+}
+
+func updateTodo(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: updateTodo")
+	setupResponse(&w, r)
+
+	switch r.Method {
+	case "OPTIONS":
+		return
+	case "POST":
+		var todoToUpdate UpdateTodoRequest
+		decoder := json.NewDecoder(r.Body)
+		decoder.Decode(&todoToUpdate)
+		databaseUpdateTodo(todoToUpdate.ID, todoToUpdate.Title)
+		fetchTodos()
+		responseJson, err := json.Marshal(todos)
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusCreated)
+		w.Write(responseJson)
+	default:
+		responseJson, err := json.Marshal(map[string]string{"message": "Please use POST method"})
+		if err != nil {
+			panic(err)
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write(responseJson)
+	}
+}
+
 type NewTodoRequest struct {
 	Title string `json:"title"`
 }
@@ -129,6 +163,7 @@ func setupResponse(w *http.ResponseWriter, req *http.Request) {
 func handleRequests() {
 	http.HandleFunc("/", welcome)
 	http.HandleFunc("/todos", getTodos)
+	http.HandleFunc("/update", updateTodo)
 	http.HandleFunc("/new", addTodo)
 	http.HandleFunc("/delete", deleteTodo)
 	http.HandleFunc("/delete-all", deleteTodos)
